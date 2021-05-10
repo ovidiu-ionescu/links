@@ -1,6 +1,6 @@
 use std::convert::Infallible;
 use bytes::Buf;
-use std::{ fs::File, io::{BufWriter, Write}, fs::rename,};
+use std::{ fs, fs::File, io::{BufWriter, Write}, fs::rename,};
 
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Method, Request, Response, Server, StatusCode};
@@ -47,7 +47,15 @@ impl ApConfig {
 #[derive(ThisError, Debug)]
 pub enum LinksError {
     #[error("Bad uuid {0}")]
-    BadUuid(String)
+    BadUuid(String),
+    #[error("Content not changed")]
+    ContentNotChanged,
+}
+
+macro_rules! err {
+    ($a:expr) => {
+        Err(Box::new($a))
+    }
 }
 
 /** Equivalent of System.currentTimeMillis */
@@ -64,7 +72,7 @@ fn verify_uuid(uuid: &str) -> Result<()> {
     }
     if !UUID.is_match(uuid) { 
         println!("Bad uuid");
-        return Err(Box::new(LinksError::BadUuid(String::from(uuid))));
+        return err!(LinksError::BadUuid(String::from(uuid)));
     }
     Ok(())
 }
@@ -75,6 +83,11 @@ async fn do_work(p: Payload) -> Result<String> {
     // validate the uuid is the right format
     verify_uuid(&p.uuid)?;
     let file_name = format!("{}/{}.md", CONFIG.storage_dir, p.uuid);
+    // check if the file content is changed
+    let current_content = fs::read_to_string(&file_name)?;
+    if current_content == p.content {
+        return err!(LinksError::ContentNotChanged);
+    }
 
     // rename existing file, if present
     let bk_file_name = format!("{}/{}_{}.md", CONFIG.storage_dir, p.uuid, get_epoch_ms()); 
