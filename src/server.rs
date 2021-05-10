@@ -1,6 +1,6 @@
 use std::convert::Infallible;
 use bytes::Buf;
-use std::{ fs::File, io::{BufWriter, Write}, };
+use std::{ fs::File, io::{BufWriter, Write}, fs::rename,};
 
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Method, Request, Response, Server, StatusCode};
@@ -9,6 +9,10 @@ use config::{Config, File as ConfigFile, FileFormat};
 use std::net::SocketAddr;
 
 use serde::{Deserialize, Serialize};
+
+use std::time::{SystemTime, UNIX_EPOCH};
+use regex::Regex;
+use thiserror::Error as ThisError;
 
 use lazy_static::lazy_static;
 type GenericError = Box<dyn std::error::Error + Send + Sync>;
@@ -40,9 +44,44 @@ impl ApConfig {
     }   
 }
 
+#[derive(ThisError, Debug)]
+pub enum LinksError {
+    #[error("Bad uuid {0}")]
+    BadUuid(String)
+}
+
+/** Equivalent of System.currentTimeMillis */
+fn get_epoch_ms() -> u128 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis()
+}
+
+fn verify_uuid(uuid: &str) -> Result<()> {
+    lazy_static! {
+        static ref UUID: Regex = Regex::new(r#"^[\da-f]{8}-([\da-f]{4}-){3}[\da-f]{12}$"#).unwrap();
+    }
+    if !UUID.is_match(uuid) { 
+        println!("Bad uuid");
+        return Err(Box::new(LinksError::BadUuid(String::from(uuid))));
+    }
+    Ok(())
+}
+
 async fn do_work(p: Payload) -> Result<String> {
     println!("Json received: {:#?}", p);
+
+    // validate the uuid is the right format
+    verify_uuid(&p.uuid)?;
     let file_name = format!("{}/{}.md", CONFIG.storage_dir, p.uuid);
+
+    // rename existing file, if present
+    let bk_file_name = format!("{}/{}_{}.md", CONFIG.storage_dir, p.uuid, get_epoch_ms()); 
+    if let Err(_) = rename(&file_name, &bk_file_name) {
+        println!("Could not rename {} to {}", &file_name, &bk_file_name);
+    }
+
     let file = File::create(file_name)?;
     let mut out = BufWriter::new(&file);
     write!(out, "{}", p.content)?;
