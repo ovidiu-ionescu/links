@@ -78,7 +78,7 @@ fn verify_uuid(uuid: &str) -> Result<()> {
 }
 
 async fn do_work(p: Payload) -> Result<String> {
-    println!("Json received: {:#?}", p);
+    //println!("Json received: {:#?}", p);
 
     // validate the uuid is the right format
     verify_uuid(&p.uuid)?;
@@ -111,15 +111,24 @@ async fn request_handler(req: Request<Body>) -> Result<Response<Body>> {
             let whole_body = hyper::body::aggregate(req).await?;
             let p: Payload = serde_json::from_reader(whole_body.reader())?;
 
-            let content = do_work(p).await?;
-
-            let response = Response::builder()
-                .status(StatusCode::OK)
-                .header("content-type", "text/html")
-                .header("server", "hyper")
-                .body(Body::from(content))
-                .unwrap();
-            Ok(response)
+            Ok(match do_work(p).await {
+                Ok(content) => {
+                    Response::builder()
+                        .status(StatusCode::OK)
+                        .header("content-type", "text/plain")
+                        .header("server", "hyper")
+                        .body(Body::from(content))
+                        .unwrap()
+                },
+                Err(e) => {
+                    Response::builder()
+                        .status(StatusCode::BAD_REQUEST)
+                        .header("content-type", "text/plain")
+                        .header("server", "hyper")
+                        .body(Body::from(e.to_string()))
+                        .unwrap()
+                }
+            })
         }
         _ => {
             let mut not_found = Response::default();
