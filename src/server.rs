@@ -14,12 +14,15 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use regex::Regex;
 use thiserror::Error as ThisError;
 
+use async_lock::Mutex;
+
 use lazy_static::lazy_static;
 type GenericError = Box<dyn std::error::Error + Send + Sync>;
 type Result<T> = std::result::Result<T, GenericError>;
 
 lazy_static! {
     static ref CONFIG: ApConfig = ApConfig::read_config();
+    static ref GLOBAL_LOCK: Mutex<usize> = Mutex::new(1);
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -79,6 +82,8 @@ fn verify_uuid(uuid: &str) -> Result<()> {
 
 async fn do_work(p: Payload) -> Result<String> {
     //println!("Json received: {:#?}", p);
+
+    let _guard = GLOBAL_LOCK.lock().await;
 
     // validate the uuid is the right format
     verify_uuid(&p.uuid)?;
