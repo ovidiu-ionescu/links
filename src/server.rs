@@ -51,8 +51,12 @@ impl ApConfig {
 pub enum LinksError {
     #[error("Bad uuid {0}")]
     BadUuid(String),
+    #[error("Bad user name {0}")]
+    BadUserName(String),
     #[error("Content not changed")]
     ContentNotChanged,
+    #[error("Rename failed")]
+    RenameFailed,
 }
 
 macro_rules! err {
@@ -80,13 +84,29 @@ fn verify_uuid(uuid: &str) -> Result<()> {
     Ok(())
 }
 
-async fn do_work(p: Payload) -> Result<String> {
+fn verify_user(user: &str) -> Result<&str> {
+    lazy_static! {
+        static ref USER: Regex = Regex::new(r#"^/CN=[a-zA-Z_-]+$"#).unwrap();
+    }
+    if !USER.is_match(user) {
+        return err!(LinksError::BadUserName(String::from(user)));
+    }
+    Ok(&user[4..])
+}
+
+#[test]
+fn test_verify_user() {
+    assert_eq!("name", verify_user("/CN=name").unwrap());
+}
+
+async fn do_work(p: Payload, cn: &str) -> Result<String> {
     //println!("Json received: {:#?}", p);
 
     let _guard = GLOBAL_LOCK.lock().await;
 
     // validate the uuid is the right format
     verify_uuid(&p.uuid)?;
+    let user = verify_user(cn)?;
     let file_name = format!("{}/{}.md", CONFIG.storage_dir, p.uuid);
     // check if the file content is changed
     let current_content = fs::read_to_string(&file_name)?;
@@ -95,9 +115,10 @@ async fn do_work(p: Payload) -> Result<String> {
     }
 
     // rename existing file, if present
-    let bk_file_name = format!("{}/{}_{}.md", CONFIG.storage_dir, p.uuid, get_epoch_ms()); 
+    let bk_file_name = format!("{}/{}_{}_{}.md", CONFIG.storage_dir, p.uuid, get_epoch_ms(), user); 
     if let Err(_) = rename(&file_name, &bk_file_name) {
         println!("Could not rename {} to {}", &file_name, &bk_file_name);
+        return err!(LinksError::RenameFailed);
     }
 
     let file = File::create(file_name)?;
@@ -107,39 +128,41 @@ async fn do_work(p: Payload) -> Result<String> {
     Ok(String::from("Standard response"))
 }
 
+fn http_response(code: StatusCode, text: &str) -> Result<Response<Body>>{
+    Ok(Response::builder()
+        .status(code)
+        .header("content-type", "text/plain")
+        .header("server", "hyper")
+        .body(Body::from(text.to_string()))
+        .unwrap()
+        )
+}
+
 async fn request_handler(req: Request<Body>) -> Result<Response<Body>> {
     match (req.method(), req.uri().path()) {
         (&Method::POST, "/save_links") => {
-            //let b = hyper::body::to_bytes(req).await?;
-            //let p = serde_json::from_reader(b)?;
+            // check if the client is authenticated
+            match req.headers().get("X-SSL-Client-Verify") {
+                Some(ssl_client_verify) if ssl_client_verify == "SUCCESS" => true,
+                Some(ssl_client_verify) => return http_response(StatusCode::UNAUTHORIZED, ssl_client_verify.to_str().unwrap_or("")),
+                _ => return http_response(StatusCode::UNAUTHORIZED, "No security header"),
+            };
+
+            // get the user
+            let user = String::from(match req.headers().get("X-SSL-Client-S-DN") {
+                Some(dn) => dn.to_str().unwrap_or(""),
+                _ => return http_response(StatusCode::FORBIDDEN, "No user specified"),
+            });
 
             let whole_body = hyper::body::aggregate(req).await?;
             let p: Payload = serde_json::from_reader(whole_body.reader())?;
 
-            Ok(match do_work(p).await {
-                Ok(content) => {
-                    Response::builder()
-                        .status(StatusCode::OK)
-                        .header("content-type", "text/plain")
-                        .header("server", "hyper")
-                        .body(Body::from(content))
-                        .unwrap()
-                },
-                Err(e) => {
-                    Response::builder()
-                        .status(StatusCode::BAD_REQUEST)
-                        .header("content-type", "text/plain")
-                        .header("server", "hyper")
-                        .body(Body::from(e.to_string()))
-                        .unwrap()
-                }
-            })
+            match do_work(p, &user).await {
+                Ok(content) => http_response(StatusCode::OK, &content),
+                Err(e) => http_response(StatusCode::BAD_REQUEST, &e.to_string()),
+            }
         }
-        _ => {
-            let mut not_found = Response::default();
-            *not_found.status_mut() = StatusCode::NOT_FOUND;
-            Ok(not_found)
-        }
+        _ => http_response(StatusCode::NOT_FOUND, "No mapping for this request")
     }   
 }
 
