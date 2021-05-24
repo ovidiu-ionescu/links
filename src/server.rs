@@ -86,17 +86,17 @@ fn verify_uuid(uuid: &str) -> Result<()> {
 
 fn verify_user(user: &str) -> Result<&str> {
     lazy_static! {
-        static ref USER: Regex = Regex::new(r#"^/CN=[a-zA-Z_-]+$"#).unwrap();
+        static ref USER: Regex = Regex::new(r#"^CN=[a-zA-Z_-]+$"#).unwrap();
     }
     if !USER.is_match(user) {
         return err!(LinksError::BadUserName(String::from(user)));
     }
-    Ok(&user[4..])
+    Ok(&user[3..])
 }
 
 #[test]
 fn test_verify_user() {
-    assert_eq!("name", verify_user("/CN=name").unwrap());
+    assert_eq!("name", verify_user("CN=name").unwrap());
 }
 
 async fn do_work(p: Payload, cn: &str) -> Result<String> {
