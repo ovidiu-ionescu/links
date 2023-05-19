@@ -47,7 +47,7 @@ impl ApConfig {
     }   
 }
 
-#[derive(ThisError, Debug)]
+#[derive(ThisError, Debug, PartialEq)]
 pub enum LinksError {
     #[error("Bad uuid {0}")]
     BadUuid(String),
@@ -159,7 +159,9 @@ async fn request_handler(req: Request<Body>) -> Result<Response<Body>> {
 
             match do_work(p, &user).await {
                 Ok(content) => http_response(StatusCode::OK, &content),
+                Err(e) if e.downcast_ref() == Some(&LinksError::ContentNotChanged) => http_response(StatusCode::from_u16(254).unwrap(), "Content not changes since last save"),
                 Err(e) => http_response(StatusCode::BAD_REQUEST, &e.to_string()),
+                //Err(e) => http_response(StatusCode::BAD_REQUEST, &e.to_string()),
             }
         }
         _ => http_response(StatusCode::NOT_FOUND, "No mapping for this request")
