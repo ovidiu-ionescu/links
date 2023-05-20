@@ -1,17 +1,22 @@
-use std::convert::Infallible;
 use bytes::Buf;
-use std::{ fs, fs::File, io::{BufWriter, Write}, fs::rename,};
+use std::convert::Infallible;
+use std::{
+    fs,
+    fs::rename,
+    fs::File,
+    io::{BufWriter, Write},
+};
 
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Method, Request, Response, Server, StatusCode};
 
-use config::{Config, File as ConfigFile, FileFormat};
+use config::Config;
 use std::net::SocketAddr;
 
 use serde::{Deserialize, Serialize};
 
-use std::time::{SystemTime, UNIX_EPOCH};
 use regex::Regex;
+use std::time::{SystemTime, UNIX_EPOCH};
 use thiserror::Error as ThisError;
 
 use async_lock::Mutex;
@@ -27,24 +32,25 @@ lazy_static! {
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Payload {
-    uuid: String,
+    uuid:    String,
     content: String,
 }
 
+#[derive(Deserialize, Debug)]
 struct ApConfig {
-    address: String,
+    address:     String,
     storage_dir: String,
 }
 
 impl ApConfig {
     fn read_config() -> ApConfig {
-        let mut c = Config::new();
-        c.merge(ConfigFile::new("settings", FileFormat::Toml).required(true)).unwrap();
-        let address = c.get_str("address").unwrap();
-        let storage_dir = c.get_str("storage_dir").unwrap();
-
-        ApConfig { address, storage_dir, }
-    }   
+        let config = Config::builder()
+            .add_source(config::File::with_name("settings").required(true))
+            .build()
+            .unwrap();
+        let ap_config: ApConfig = config.get("application").unwrap();
+        ap_config
+    }
 }
 
 #[derive(ThisError, Debug, PartialEq)]
@@ -62,7 +68,7 @@ pub enum LinksError {
 macro_rules! err {
     ($a:expr) => {
         Err(Box::new($a))
-    }
+    };
 }
 
 /** Equivalent of System.currentTimeMillis */
@@ -77,7 +83,7 @@ fn verify_uuid(uuid: &str) -> Result<()> {
     lazy_static! {
         static ref UUID: Regex = Regex::new(r#"^[\da-f]{8}-([\da-f]{4}-){3}[\da-f]{12}$"#).unwrap();
     }
-    if !UUID.is_match(uuid) { 
+    if !UUID.is_match(uuid) {
         println!("Bad uuid");
         return err!(LinksError::BadUuid(String::from(uuid)));
     }
@@ -115,7 +121,13 @@ async fn do_work(p: Payload, cn: &str) -> Result<String> {
     }
 
     // rename existing file, if present
-    let bk_file_name = format!("{}/{}_{}_{}.md", CONFIG.storage_dir, p.uuid, get_epoch_ms(), user); 
+    let bk_file_name = format!(
+        "{}/{}_{}_{}.md",
+        CONFIG.storage_dir,
+        p.uuid,
+        get_epoch_ms(),
+        user
+    );
     if let Err(_) = rename(&file_name, &bk_file_name) {
         println!("Could not rename {} to {}", &file_name, &bk_file_name);
         return err!(LinksError::RenameFailed);
@@ -128,14 +140,13 @@ async fn do_work(p: Payload, cn: &str) -> Result<String> {
     Ok(String::from("Standard response"))
 }
 
-fn http_response(code: StatusCode, text: &str) -> Result<Response<Body>>{
+fn http_response(code: StatusCode, text: &str) -> Result<Response<Body>> {
     Ok(Response::builder()
         .status(code)
         .header("content-type", "text/plain")
         .header("server", "hyper")
         .body(Body::from(text.to_string()))
-        .unwrap()
-        )
+        .unwrap())
 }
 
 async fn request_handler(req: Request<Body>) -> Result<Response<Body>> {
@@ -144,7 +155,12 @@ async fn request_handler(req: Request<Body>) -> Result<Response<Body>> {
             // check if the client is authenticated
             match req.headers().get("X-SSL-Client-Verify") {
                 Some(ssl_client_verify) if ssl_client_verify == "SUCCESS" => true,
-                Some(ssl_client_verify) => return http_response(StatusCode::UNAUTHORIZED, ssl_client_verify.to_str().unwrap_or("")),
+                Some(ssl_client_verify) => {
+                    return http_response(
+                        StatusCode::UNAUTHORIZED,
+                        ssl_client_verify.to_str().unwrap_or(""),
+                    )
+                }
                 _ => return http_response(StatusCode::UNAUTHORIZED, "No security header"),
             };
 
@@ -155,17 +171,29 @@ async fn request_handler(req: Request<Body>) -> Result<Response<Body>> {
             });
 
             let whole_body = hyper::body::aggregate(req).await?;
-            let p: Payload = serde_json::from_reader(whole_body.reader())?;
+            let p: Payload = match serde_json::from_reader(whole_body.reader()) {
+                Ok(p) => p,
+                Err(e) => {
+                    return http_response(
+                        StatusCode::BAD_REQUEST,
+                        format!("Error parsing json: {}", e).as_str(),
+                    );
+                }
+            };
 
             match do_work(p, &user).await {
                 Ok(content) => http_response(StatusCode::OK, &content),
-                Err(e) if e.downcast_ref() == Some(&LinksError::ContentNotChanged) => http_response(StatusCode::from_u16(254).unwrap(), "Content not changes since last save"),
-                Err(e) => http_response(StatusCode::BAD_REQUEST, &e.to_string()),
-                //Err(e) => http_response(StatusCode::BAD_REQUEST, &e.to_string()),
+                Err(e) if e.downcast_ref() == Some(&LinksError::ContentNotChanged) => {
+                    http_response(
+                        StatusCode::from_u16(254).unwrap(),
+                        "Content has not changed since last save",
+                    )
+                }
+                Err(e) => http_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string()),
             }
         }
-        _ => http_response(StatusCode::NOT_FOUND, "No mapping for this request")
-    }   
+        _ => http_response(StatusCode::NOT_FOUND, "No mapping for this request"),
+    }
 }
 
 pub async fn start_server() -> Result<()> {
@@ -178,9 +206,12 @@ pub async fn start_server() -> Result<()> {
         // `service_fn` is a helper to convert a function that
         // returns a Response into a `Service`.
         async { Ok::<_, Infallible>(service_fn(request_handler)) }
-    }); 
+    });
 
-    let socket_addr: SocketAddr = CONFIG.address.parse().expect("Unble to parse socket address");
+    let socket_addr: SocketAddr = CONFIG
+        .address
+        .parse()
+        .expect("Unble to parse socket address");
     let server = Server::bind(&socket_addr).serve(make_svc);
 
     println!("Listening on http://{}", &CONFIG.address);
@@ -189,4 +220,3 @@ pub async fn start_server() -> Result<()> {
 
     Ok(())
 }
-
