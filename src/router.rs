@@ -105,6 +105,11 @@ fn verify_user(user: &str) -> Result<&str> {
 #[test]
 fn test_verify_user() {
     assert_eq!("name", verify_user("name").unwrap());
+    let res = verify_user("embedded/slash").unwrap_err();
+    assert_eq!(
+        res.downcast_ref(),
+        Some(&LinksError::BadUserName(String::from("name with spaces")))
+    );
 }
 
 async fn do_work(p: Payload, cn: &str) -> Result<String> {
