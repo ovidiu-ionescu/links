@@ -2,7 +2,7 @@
 name = "links-server"
 version = "0.1.1"
 edition = "2021"
-authors = ["Ovidiu Ionescu <ovidiu@ionescu.net
+authors = ["Ovidiu Ionescu <ovidiu@ionescu.net>"]
 description = "A server for managing lists of urls."
 repository = "https://github.com/ovidiu-ionescu/links-server"
 license = "AGPL-3.0-or-later"
