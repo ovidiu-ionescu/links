@@ -1,3 +1,4 @@
+api_ip = "0.0.0.0:3000"
+
 [application]
-address = "0.0.0.0:3000"
 storage_dir = "data"

@@ -1,7 +1,11 @@
 [package]
 name = "links-server"
-version = "0.1.0"
-edition = "2018"
+version = "0.1.1"
+edition = "2021"
+authors = ["Ovidiu Ionescu <ovidiu@ionescu.net
+description = "A server for managing lists of urls."
+repository = "https://github.com/ovidiu-ionescu/links-server"
+license = "AGPL-3.0-or-later"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

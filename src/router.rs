@@ -1,11 +1,12 @@
 use bytes::Buf;
 use lib_hyper_organizator::{
-    authentication::check_security::UserId, response_utils::read_full_body,
+    authentication::check_security::UserId,
+    response_utils::{parse_body, read_full_body},
 };
 use std::{
     fs,
-    fs::rename,
     fs::File,
+    fs::{rename, OpenOptions},
     io::{BufWriter, Write},
 };
 
@@ -35,6 +36,12 @@ lazy_static! {
 struct Payload {
     uuid:    String,
     content: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Click {
+    uuid: String,
+    href: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -177,9 +184,36 @@ async fn save_links(mut request: Request<Body>) -> Result<Response<Body>> {
     }
 }
 
+async fn write_click(click: Click, user: &str) -> Result<()> {
+    let file_name = format!("{}/click.log", CONFIG.storage_dir);
+    let file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(file_name)?;
+    let line = format!(
+        "{} {} {} {}\n",
+        get_epoch_ms(),
+        user,
+        click.uuid,
+        click.href
+    );
+    let mut out = BufWriter::new(&file);
+    write!(out, "{}", line)?;
+    out.flush()?;
+    Ok(())
+}
+
+async fn register_click(mut request: Request<Body>) -> Result<Response<Body>> {
+    let click = parse_body(&mut request).await?;
+    let user = get_user_name(&request)?;
+    write_click(click, user).await?;
+    Ok(GenericMessage::text(StatusCode::OK, "Click registered"))
+}
+
 pub async fn request_handler(req: Request<Body>) -> Result<Response<Body>> {
     match (req.method(), req.uri().path()) {
         (&Method::POST, "/save_links") => save_links(req).await,
+        (&Method::POST, "/register_click") => register_click(req).await,
         _ => GenericMessage::not_found(),
     }
 }
