@@ -23,7 +23,7 @@ bytes = "1.0.1"
 regex = "1.4.5"
 thiserror = "1.0"
 async-lock = "2.4.0"
-lib-hyper-organizator = { path = "/home/ovidiu/Projects/organizator-3/Backend/Server/lib-hyper-organizator", features = ["security"] }
+lib-hyper-organizator = { version = "0.3.0", features = ["security"] }
 mimalloc = "0.1"
 tracing-subscriber = "0.3"
 tracing = "0.1.37"
