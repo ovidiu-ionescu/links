@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Links</title>
+    <link rel="shortcut icon" href="images/links.ico" />
+    <link rel="manifest" href="links-manifest.json" />
+<style type="text/css">
+  /* https://color.adobe.com/search?q=467380&t=hex */
+  .theme-sabrina {
+    --color-1: #69acbf;
+    --color-2: #467380;
+    --color-3: #8ce6ff;
+    --color-4: #233940;
+    --color-5: #7ecfe6;
+  }
+  .theme-ovidiu {
+    --color-1: #69acbf;
+    --color-2: #467380; /* background title & border */
+    --color-3: #8ce6ff; /* link text */
+    --color-4: black; /* background */
+    --color-5: yellow; /* highlight */
+  }
+  .theme-christina {
+    --color-1: #69adbf;
+    --color-2: #467380;
+    --color-3: #f2ff87;
+    --color-4: #233a40;
+    --color-5: #7ecfe6;
+  }
+  .theme-LinYiquing {
+    --color-1: #b30024;
+    --color-2: #a65933;
+    --color-3: #581919;
+    --color-4: #172737;
+    --color-5: #8ce6ff;
+  }
+  .theme-heather {
+    --color-1: #a8coce;
+    --color-2: #aab0b5;
+    --color-4: #768591;
+    --color-3: #dea800;
+    --color-5: #eeec00;
+  }
+  .postit-colors {
+    --stickie-yellow: #ffc;
+    --stickie-green: #cfc;
+    --stickie-purple: #ccf;
+    --stickie-font-color: black;
+  }
+  #dest ul {
+        line-height: 1.25em;
+        padding-top: 2em;
+        padding-bottom: 0.41em;
+        position: relative;
+        display: inline-block;
+        width: 7.08em;
+        border: 1px solid var(--color-2);
+        vertical-align: top;
+        margin-top: 0;
+
+  }
+  #dest ul li:first-child {
+    list-style: none;
+    background-color: var(--color-2);
+    display: block;
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    left: 0;
+    top: 0;
+  }
+          a:link {
+        color: var(--color-3);
+        text-decoration: none;
+      }
+
+      a:visited {
+        color: var(--color-3);
+        text-decoration: none;
+      }
+      a:hover {
+        color: black;
+        background-color: var(--color-5);
+      }
+
+  #dest {
+        background-color: var(--color-4);
+        font-size: 19px;
+        font-family: Arial;
+        color: var(--color-3);
+  }
+  html {
+        background-color: var(--color-4);
+  }
+  hr {
+    color: var(--color-2);
+  }
+  button {
+    display: inline-block;
+    padding: 0.4em 1em;
+    color: var(--color-3);
+    _border: 2px solid var(--color-4);
+    border-radius: 0.5em;
+    text-decoration: none;
+    font-size: 0.8rem;
+    background-color: var(--color-2);
+    text-transform: uppercase;
+  }
+  #pwd {
+    border-radius: 0.5em;
+  }
+  /*
+   * Postit notes CSS inspired from: https://code.tutsplus.com/tutorials/create-a-sticky-note-effect-in-5-easy-steps-with-css3-and-html5--net-13934
+   */
+  #dest p {
+    color: var(--stickie-font-color);
+    display: inline-block;
+    width: 10em;
+    min-height: 10em;
+    padding: 1em;
+    display: inline-block;
+    vertical-align: top;
+    position: relative;
+    margin: 5px;
+    box-shadow: 5px 5px 7px rgba(0,0,0,.4);
+    position: relative;
+    background: var(--stickie-purple);
+    transition: transform .15s linear;
+    transform: rotate(-6deg);
+  }
+  #dest p:nth-child(3n):hover, #dest p:nth-child(3n+1):hover, #dest p:nth-child(3n + 2):hover, #dest p:nth-child(5n):hover {
+    box-shadow:10px 10px 7px rgba(0,0,0,.4);
+    transform: scale(1.25);
+    z-index:5;
+  }
+  #dest p:nth-child(3n + 1) {
+    background: var(--stickie-yellow);
+  }
+  #dest p:nth-child(3n + 2) {
+    background: var(--stickie-green);
+  }
+
+  #dest p:nth-child(even) {
+    transform: rotate(4deg);
+    top: 5px;
+  }
+  #dest p:nth-child(3n) {
+    transform: rotate(-3deg);
+    top: -5px;
+  }
+  #dest p:nth-child(5n) {
+    transform: rotate(5deg);
+    top: -10px;
+  }
+  
+  #content {
+    width: 100%;
+    height: 50em;
+  }
+  #toolbar {
+    display: flex;
+  }
+  #toolbar button {
+    margin: 0 5px 0 5px;
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  #pwd {
+    margin: 0 15px 0 15px;
+  }
+  #edit {
+    margin-left: auto !important;
+  }
+</style>
+    <script type="module">
+      const bid = x => document.getElementById(x);
+
+      import init, { process_markdown, memo_encrypt, memo_decrypt } from "./pkg_test/concatenate.js";
+      await init();
+      const uuidRegex = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/i;
+      const uuid = uuidRegex.exec(window.location.search)[0];
+      let text_url =`${uuid}.md?${(+ new Date)}`;
+      let [_x, text_content] = await Promise.all([
+        init(), fetch(text_url).then(response => response.text().then(text => bid('content').value = text ))
+      ]);
+
+      window.process_markdown = process_markdown;
+      window.memo_encrypt = memo_encrypt;
+      window.memo_decrypt = memo_decrypt;
+
+      const transform = () => {
+        let text = bid('content').value
+        let title = /(?:#\s+)(.+)/.exec(text)?.[1]
+        if (title) document.title = title
+        let processed = process_markdown(text, 16);
+        bid('dest').innerHTML = processed;
+      }
+      bid('transform').addEventListener('click', e => {
+        transform();
+      });
+      bid('encrypt').addEventListener('click', e => {
+        let text = bid('content').value
+        let pwd = bid('pwd').value;
+        let enc_text = memo_encrypt(text, pwd, +new Date());
+        bid('content').value = enc_text;
+        let processed = process_markdown(enc_text, 16);
+        bid('dest').innerHTML = processed;
+      });
+      bid('decrypt').addEventListener('click', e => {
+        let text = bid('content').value
+        let pwd = bid('pwd').value;
+        let clear_text = memo_decrypt(text, pwd);
+        bid('content').value = clear_text;
+        let processed = process_markdown(clear_text, 16);
+        bid('dest').innerHTML = processed;
+      });
+      bid('edit').addEventListener('click', e => {
+        let edit_toolbar = bid('edit_toolbar');
+        let display = edit_toolbar.style.display == 'none' ? 'block' : 'none';
+        bid('edit_toolbar').style.display = display;
+        bid('content').style.display = display;
+      });
+      bid('select-theme').addEventListener('change', e => {
+        const theme = e.srcElement.value;
+        localStorage.setItem('theme', theme);
+        document.documentElement.className = `${theme} postit-colors`;
+      })
+      bid('save').addEventListener('click', async e => {
+        const response = await fetch('/save_links', {
+          method: 'POST',
+          mode: 'cors', cache: 'no-cache', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uuid: uuid, content: bid('content').value})
+        });
+        if (!response.ok) {
+            console.log({response})
+            switch(response.status) {
+                case 401:
+                    alert("Save failed, maybe check the certificate");
+                    break;
+                default:
+                    alert("Save failed");
+                    break;
+            }
+        } else if(254 == response.status) {
+            alert("No changes, no need to save");
+        }
+      });
+      // populate the theme selector drop down
+      bid('select-theme').innerHTML = [...document.styleSheets]
+        .flatMap(s => [...s.cssRules])
+        .map(r => r.selectorText)
+        .filter(t => t.startsWith('.theme-')).map(n => n.substring(7))
+        .map(v => `<option value="theme-${v}">${v}</option>`)
+        .join('\n');
+
+      const initial_theme = localStorage.getItem('theme') || 'theme-ovidiu';
+      document.documentElement.className = `${initial_theme} postit-colors`;
+      bid('select-theme').value = initial_theme;
+
+      // listen to all the clicks in the content area
+      bid('dest').addEventListener('click', async e => {
+        const href = e.target.getAttribute("href");
+        if (!href) return;
+
+        const response = await fetch('/register_click', {
+          method: 'POST',
+          mode: 'cors', cache: 'no-cache', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uuid: uuid, href})
+        });
+
+      });
+
+      transform();
+     </script>
+  </head>
+  <body>
+       <div id="dest"></div>
+       <div id="editor">
+         <p id="toolbar">
+         <button id="decrypt">Decrypt</button>
+         <input id="pwd" type="password" value="secret">
+         <span id="edit_toolbar" style="display: none">
+           <button id="encrypt">Encrypt</button>
+           <button id="transform">Transform</button>
+           <button id="save">Save</button>
+           <select id="select-theme">
+             <option value='theme-ovidiu'>Ovidiu</option>
+             <option value='theme-sabrina'>Sabrina</option>
+           </select>
+         </span>
+         <button id="edit">Edit</button>
+         </p>
+         <textarea id="content" style="display:none"></textarea>
+       </div>
+  </body>
+</html>

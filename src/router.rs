@@ -8,7 +8,6 @@ use std::{
     fs::File,
     io::{BufWriter, Write},
 };
-use tracing::info;
 
 use hyper::{Body, Method, Request, Response, StatusCode};
 
@@ -40,7 +39,6 @@ struct Payload {
 
 #[derive(Deserialize, Debug)]
 struct ApConfig {
-    address:     String,
     storage_dir: String,
 }
 

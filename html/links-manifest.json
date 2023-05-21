@@ -1,0 +1,24 @@
+{
+  "short_name": "Links",
+  "name": "Ovidiu's useful links",
+  "icons": [
+    {
+      "src": "/images/links-1x.png",
+      "type": "image/png",
+      "sizes": "48x48"
+    },
+    {
+      "src": "/images/links-2x.png",
+      "type": "image/png",
+      "sizes": "96x96"
+    },
+    {
+      "src": "/images/links-4x.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ],
+  "start_url": "links.html?launcher=true",
+  "display": "fullscreen",
+  "scope": "*"
+}
