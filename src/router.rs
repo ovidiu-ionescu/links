@@ -1,12 +1,9 @@
 use bytes::Buf;
-use lib_hyper_organizator::{
-    authentication::check_security::UserId,
-    response_utils::{parse_body, read_full_body},
-};
+use lib_hyper_organizator::response_utils::read_full_body;
 use std::{
     fs,
+    fs::rename,
     fs::File,
-    fs::{rename, OpenOptions},
     io::{BufWriter, Write},
 };
 
@@ -17,18 +14,21 @@ use config::Config;
 use serde::{Deserialize, Serialize};
 
 use regex::Regex;
-use std::time::{SystemTime, UNIX_EPOCH};
 use thiserror::Error as ThisError;
 
 use async_lock::Mutex;
 
+use crate::utils::Result;
 use lazy_static::lazy_static;
-type GenericError = Box<dyn std::error::Error + Send + Sync>;
-type Result<T> = std::result::Result<T, GenericError>;
 use lib_hyper_organizator::response_utils::{GenericMessage, PolymorphicGenericMessage};
 
+use crate::{
+    links::register_click,
+    utils::{get_epoch_ms, get_user_name},
+};
+
 lazy_static! {
-    static ref CONFIG: ApConfig = ApConfig::read_config();
+    pub static ref CONFIG: ApConfig = ApConfig::read_config();
     static ref GLOBAL_LOCK: Mutex<usize> = Mutex::new(1);
 }
 
@@ -38,15 +38,9 @@ struct Payload {
     content: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct Click {
-    uuid: String,
-    href: String,
-}
-
 #[derive(Deserialize, Debug)]
-struct ApConfig {
-    storage_dir: String,
+pub struct ApConfig {
+    pub storage_dir: String,
 }
 
 impl ApConfig {
@@ -76,14 +70,6 @@ macro_rules! err {
     ($a:expr) => {
         Err(Box::new($a))
     };
-}
-
-/** Equivalent of System.currentTimeMillis */
-fn get_epoch_ms() -> u128 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_millis()
 }
 
 fn verify_uuid(uuid: &str) -> Result<()> {
@@ -152,14 +138,6 @@ async fn do_work(p: Payload, cn: &str) -> Result<String> {
     Ok(String::from("Standard response"))
 }
 
-fn get_user_name(request: &Request<Body>) -> Result<&str> {
-    let Some(user_id) = request.extensions().get::<UserId>() else {
-        return Err(GenericError::from("No user found in request, this should not happen"));
-    };
-    let user = &user_id.0;
-    Ok(user)
-}
-
 async fn save_links(mut request: Request<Body>) -> Result<Response<Body>> {
     //let whole_body = hyper::body::aggregate(request).await?;
     let whole_body = read_full_body(&mut request).await?;
@@ -182,32 +160,6 @@ async fn save_links(mut request: Request<Body>) -> Result<Response<Body>> {
         ),
         Err(e) => GenericMessage::text(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string()),
     }
-}
-
-async fn write_click(click: Click, user: &str) -> Result<()> {
-    let file_name = format!("{}/click.log", CONFIG.storage_dir);
-    let file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(file_name)?;
-    let line = format!(
-        "{} {} {} {}\n",
-        get_epoch_ms(),
-        user,
-        click.uuid,
-        click.href
-    );
-    let mut out = BufWriter::new(&file);
-    write!(out, "{}", line)?;
-    out.flush()?;
-    Ok(())
-}
-
-async fn register_click(mut request: Request<Body>) -> Result<Response<Body>> {
-    let click = parse_body(&mut request).await?;
-    let user = get_user_name(&request)?;
-    write_click(click, user).await?;
-    Ok(GenericMessage::text(StatusCode::OK, "Click registered"))
 }
 
 pub async fn request_handler(req: Request<Body>) -> Result<Response<Body>> {
