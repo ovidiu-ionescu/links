@@ -1,8 +1,11 @@
 use std::{
-    fs::{File, OpenOptions},
+    fs::OpenOptions,
     io::{BufWriter, Write},
-    sync::{mpsc::Sender, Arc, Mutex},
+    sync::{mpsc::Sender, Arc},
 };
+use tokio::fs::File;
+use tokio::io::{self, AsyncWriteExt};
+use tokio::sync::Mutex;
 
 use crate::{
     router::CONFIG,
@@ -39,21 +42,23 @@ fn setup() -> Arc<Mutex<File>> {
         .append(true)
         .open(file_name)
         .unwrap();
-    Arc::new(Mutex::new(file))
+    Arc::new(Mutex::new(file.into()))
 }
 
 async fn write_click(click: Click, user: &str) -> Result<()> {
-    let mut file = CLICK_LOG.lock().unwrap();
+    let mut file = CLICK_LOG.lock().await;
+    let mut buf = Vec::with_capacity(1020);
     writeln!(
-        file,
+        buf,
         "{} {} {} {}",
         get_epoch_ms(),
         user,
         click.uuid,
         click.href
     )?;
+    file.write_all(&buf).await?;
 
-    file.flush()?;
+    file.flush().await?;
     Ok(())
 }
 
