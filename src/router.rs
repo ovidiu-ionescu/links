@@ -126,7 +126,7 @@ async fn do_work(p: Payload, cn: &str) -> Result<String> {
         get_epoch_ms(),
         user
     );
-    if let Err(_) = rename(&file_name, &bk_file_name) {
+    if rename(&file_name, &bk_file_name).is_err() {
         println!("Could not rename {} to {}", &file_name, &bk_file_name);
         return err!(LinksError::RenameFailed);
     }
@@ -152,7 +152,7 @@ async fn save_links(mut request: Request<Body>) -> Result<Response<Body>> {
     };
 
     let user = get_user_name(&request)?;
-    match do_work(p, &user).await {
+    match do_work(p, user).await {
         Ok(content) => GenericMessage::text(StatusCode::OK, &content),
         Err(e) if e.downcast_ref() == Some(&LinksError::ContentNotChanged) => GenericMessage::text(
             StatusCode::from_u16(254).unwrap(),

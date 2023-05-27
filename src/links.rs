@@ -1,10 +1,10 @@
 use std::{
     fs::OpenOptions,
     io::{BufWriter, Write},
-    sync::{mpsc::Sender, Arc},
+    sync::Arc,
 };
 use tokio::fs::File;
-use tokio::io::{self, AsyncWriteExt};
+use tokio::io::AsyncWriteExt;
 use tokio::sync::Mutex;
 
 use crate::{
