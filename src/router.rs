@@ -94,14 +94,28 @@ fn verify_user(user: &str) -> Result<&str> {
     Ok(user)
 }
 
-#[test]
-fn test_verify_user() {
-    assert_eq!("name", verify_user("name").unwrap());
-    let res = verify_user("embedded/slash").unwrap_err();
-    assert_eq!(
-        res.downcast_ref(),
-        Some(&LinksError::BadUserName(String::from("name with spaces")))
-    );
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_verify_user() {
+        assert_eq!("name", verify_user("name").unwrap());
+
+        let name_with_slash = "embedded/slash";
+        let res = verify_user(name_with_slash).unwrap_err();
+        assert_eq!(
+            res.downcast_ref(),
+            Some(&LinksError::BadUserName(String::from(name_with_slash)))
+        );
+
+        let name_with_spaces = "name with spaces";
+        let res = verify_user(name_with_spaces).unwrap_err();
+        assert_eq!(
+            res.downcast_ref(),
+            Some(&LinksError::BadUserName(String::from(name_with_spaces)))
+        );
+    }
 }
 
 async fn do_work(p: Payload, cn: &str) -> Result<String> {

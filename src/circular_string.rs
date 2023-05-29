@@ -124,12 +124,10 @@ impl<'a> IntoIterator for &'a CircularString {
 
 /// find where the gap is
 fn find_boundary(buffer: &[u8], size: usize) -> usize {
-    let s = unsafe { from_utf8_unchecked(&buffer) };
+    let s = unsafe { from_utf8_unchecked(buffer) };
     for (i, c) in s.char_indices() {
-        if c == '\n' {
-            if i + 1 >= size {
-                return i + 1;
-            }
+        if c == '\n' && i + 1 >= size {
+            return i + 1;
         }
     }
     buffer.len()

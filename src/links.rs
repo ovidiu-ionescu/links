@@ -70,14 +70,12 @@ mod read_click_log {
     };
 
     pub(super) fn read_click_log(file_name: &str, cs: &mut CircularString) {
-        if let Ok(file) = File::open(&file_name) {
+        if let Ok(file) = File::open(file_name) {
             let reader = BufReader::new(file);
             let mut count = 0;
-            for line in reader.lines() {
-                if let Ok(line) = line {
-                    cs.push(&line);
-                    count += 1;
-                }
+            for line in reader.lines().flatten() {
+                cs.push(&line);
+                count += 1;
             }
             info!("Read {} lines from {file_name}", count);
         }
