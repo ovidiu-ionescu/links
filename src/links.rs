@@ -1,13 +1,16 @@
 use std::{
     fs::OpenOptions,
     io::{BufWriter, Write},
+    str::from_utf8_unchecked,
     sync::Arc,
 };
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 use tokio::sync::Mutex;
+use tracing::info;
 
 use crate::{
+    circular_string::CircularString,
     router::CONFIG,
     utils::{get_epoch_ms, get_user_name, Result},
 };
@@ -19,7 +22,12 @@ use lib_hyper_organizator::response_utils::{
 use serde::{Deserialize, Serialize};
 
 lazy_static! {
-    pub static ref CLICK_LOG: Arc<Mutex<File>> = setup();
+    pub static ref CLICK_LOG: Arc<Mutex<DB>> = setup();
+}
+
+pub struct DB {
+    file: File,
+    buf:  CircularString,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -35,18 +43,49 @@ struct LinkMessage {
     click: Click,
 }
 
-fn setup() -> Arc<Mutex<File>> {
+fn setup() -> Arc<Mutex<DB>> {
     let file_name = format!("{}/click.log", CONFIG.storage_dir);
+    // create a buffer and read the file into
+    let mut cs = CircularString::with_capacity(CONFIG.click_buffer_size);
+    read_click_log::read_click_log(&file_name, &mut cs);
+
     let file = OpenOptions::new()
         .create(true)
         .append(true)
         .open(file_name)
         .unwrap();
-    Arc::new(Mutex::new(file.into()))
+
+    Arc::new(Mutex::new(DB {
+        file: file.into(),
+        buf:  cs,
+    }))
+}
+
+mod read_click_log {
+    use super::info;
+    use super::CircularString;
+    use std::{
+        fs::File,
+        io::{BufRead, BufReader},
+    };
+
+    pub(super) fn read_click_log(file_name: &str, cs: &mut CircularString) {
+        if let Ok(file) = File::open(&file_name) {
+            let reader = BufReader::new(file);
+            let mut count = 0;
+            for line in reader.lines() {
+                if let Ok(line) = line {
+                    cs.push(&line);
+                    count += 1;
+                }
+            }
+            info!("Read {} lines from {file_name}", count);
+        }
+    }
 }
 
 async fn write_click(click: Click, user: &str) -> Result<()> {
-    let mut file = CLICK_LOG.lock().await;
+    let mut db = CLICK_LOG.lock().await;
     let mut buf = Vec::with_capacity(1020);
     writeln!(
         buf,
@@ -56,9 +95,10 @@ async fn write_click(click: Click, user: &str) -> Result<()> {
         click.uuid,
         click.href
     )?;
-    file.write_all(&buf).await?;
+    db.buf.push(unsafe { from_utf8_unchecked(&buf) });
+    db.file.write_all(&buf).await?;
 
-    file.flush().await?;
+    db.file.flush().await?;
     Ok(())
 }
 

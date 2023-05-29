@@ -40,7 +40,8 @@ struct Payload {
 
 #[derive(Deserialize, Debug)]
 pub struct ApConfig {
-    pub storage_dir: String,
+    pub storage_dir:       String,
+    pub click_buffer_size: usize,
 }
 
 impl ApConfig {
