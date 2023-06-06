@@ -22,10 +22,7 @@ use crate::utils::Result;
 use lazy_static::lazy_static;
 use lib_hyper_organizator::response_utils::{GenericMessage, PolymorphicGenericMessage};
 
-use crate::{
-    links::register_click,
-    utils::{get_epoch_ms, get_user_name},
-};
+use crate::utils::{get_epoch_ms, get_user_name};
 
 lazy_static! {
     pub static ref CONFIG: ApConfig = ApConfig::read_config();
@@ -180,7 +177,8 @@ async fn save_links(mut request: Request<Body>) -> Result<Response<Body>> {
 pub async fn request_handler(req: Request<Body>) -> Result<Response<Body>> {
     match (req.method(), req.uri().path()) {
         (&Method::POST, "/save_links") => save_links(req).await,
-        (&Method::POST, "/register_click") => register_click(req).await,
+        (&Method::POST, "/register_click") => crate::links::register_click(req).await,
+        (&Method::GET, "/link_stats") => crate::links::get_link_stats(req).await,
         _ => GenericMessage::not_found(),
     }
 }

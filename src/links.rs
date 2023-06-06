@@ -1,4 +1,5 @@
 use std::{
+    collections::HashSet,
     fs::OpenOptions,
     io::{BufWriter, Write},
     str::from_utf8_unchecked,
@@ -124,4 +125,36 @@ pub async fn register_click(mut request: Request<Body>) -> Result<Response<Body>
     let user = get_user_name(&request)?;
     write_click(click, user).await?;
     Ok(GenericMessage::text(StatusCode::OK, "Click registered"))
+}
+
+fn compute_link_stats(buf: &CircularString) -> HashSet<&str> {
+    let mut links = HashSet::new();
+    buf.into_iter().for_each(|s| {
+        if let Some(link) = s.rsplit_once(' ') {
+            links.insert(link.1);
+        }
+    });
+    links
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_compute_link_stats() {
+        let mut buf = CircularString::with_capacity(1000);
+        buf.push("pref https://www.google.com");
+        buf.push("pref https://www.google.com");
+        buf.push("pref https://www.microsoft.com");
+        let stats = compute_link_stats(&buf);
+        assert_eq!(stats.len(), 2);
+    }
+}
+
+pub async fn get_link_stats(mut _request: Request<Body>) -> Result<Response<Body>> {
+    let db = CLICK_LOG.lock().await;
+    let stats = compute_link_stats(&db.buf);
+    let json = serde_json::to_string(&stats)?;
+    GenericMessage::json_string_response(json)
 }
