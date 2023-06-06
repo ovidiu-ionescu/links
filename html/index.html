@@ -173,6 +173,12 @@
   #edit {
     margin-left: auto !important;
   }
+  body label {
+      font-family: Arial;
+      color: var(--color-3);
+      padding-top: 6px;
+      padding-right: 10px;
+  }
 </style>
     <script type="module">
       const bid = x => document.getElementById(x);
@@ -215,6 +221,20 @@
         bid('content').value = clear_text;
         let processed = process_markdown(clear_text, 16);
         bid('dest').innerHTML = processed;
+      });
+      bid('links').addEventListener('click', async e => {
+        const dest = bid('dest')
+        if(!e.target.checked) {
+          dest.querySelectorAll('a').forEach(a => a.style.color = '');
+        } else {
+          const response = await fetch('link_stats')
+          if(!response.ok) console.log('could not fetch link stats', response);
+          const data = await response.json();
+          data.forEach(url => {
+            const links = dest.querySelectorAll(`a[href="${url}"]`);
+            links.forEach(a => a.style.color = 'var(--color-5)' );
+          });
+        }
       });
       bid('edit').addEventListener('click', e => {
         let edit_toolbar = bid('edit_toolbar');
@@ -283,6 +303,7 @@
          <p id="toolbar">
          <button id="decrypt">Decrypt</button>
          <input id="pwd" type="password" value="secret">
+         <label for="links">Highlight</label><input id="links" type="checkbox">
          <span id="edit_toolbar" style="display: none">
            <button id="encrypt">Encrypt</button>
            <button id="transform">Transform</button>
