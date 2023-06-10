@@ -15,11 +15,9 @@ use crate::{
     router::CONFIG,
     utils::{get_epoch_ms, get_user_name, Result},
 };
-use hyper::{Body, Request, Response, StatusCode};
+use hyper::{Body, Request, Response};
 use lazy_static::lazy_static;
-use lib_hyper_organizator::response_utils::{
-    parse_body, GenericMessage, PolymorphicGenericMessage,
-};
+use lib_hyper_organizator::response_utils::{parse_body, IntoResultHyperResponse};
 use serde::{Deserialize, Serialize};
 
 lazy_static! {
@@ -124,7 +122,7 @@ pub async fn register_click(mut request: Request<Body>) -> Result<Response<Body>
     let click = parse_body(&mut request).await?;
     let user = get_user_name(&request)?;
     write_click(click, user).await?;
-    Ok(GenericMessage::text(StatusCode::OK, "Click registered"))
+    "Click registered".text_reply()
 }
 
 fn compute_link_stats(buf: &CircularString) -> HashSet<&str> {
@@ -155,6 +153,5 @@ mod test {
 pub async fn get_link_stats(mut _request: Request<Body>) -> Result<Response<Body>> {
     let db = CLICK_LOG.lock().await;
     let stats = compute_link_stats(&db.buf);
-    let json = serde_json::to_string(&stats)?;
-    GenericMessage::json_string_response(json)
+    serde_json::to_string(&stats)?.json_reply()
 }

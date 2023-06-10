@@ -1,5 +1,5 @@
 use bytes::Buf;
-use lib_hyper_organizator::response_utils::read_full_body;
+use lib_hyper_organizator::response_utils::{read_full_body, IntoResultHyperResponse};
 use std::{
     fs,
     fs::rename,
@@ -20,7 +20,6 @@ use async_lock::Mutex;
 
 use crate::utils::Result;
 use lazy_static::lazy_static;
-use lib_hyper_organizator::response_utils::{GenericMessage, PolymorphicGenericMessage};
 
 use crate::utils::{get_epoch_ms, get_user_name};
 
@@ -156,21 +155,21 @@ async fn save_links(mut request: Request<Body>) -> Result<Response<Body>> {
     let p: Payload = match serde_json::from_reader(whole_body.reader()) {
         Ok(p) => p,
         Err(e) => {
-            return GenericMessage::text(
-                StatusCode::BAD_REQUEST,
-                format!("Error parsing json: {}", e).as_str(),
-            );
+            return format!("Error parsing json: {}", e)
+                .text_reply_with_code(StatusCode::BAD_REQUEST);
         }
     };
 
     let user = get_user_name(&request)?;
     match do_work(p, user).await {
-        Ok(content) => GenericMessage::text(StatusCode::OK, &content),
-        Err(e) if e.downcast_ref() == Some(&LinksError::ContentNotChanged) => GenericMessage::text(
-            StatusCode::from_u16(254).unwrap(),
-            "Content has not changed since last save",
-        ),
-        Err(e) => GenericMessage::text(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string()),
+        Ok(content) => content.text_reply(),
+        Err(e) if e.downcast_ref() == Some(&LinksError::ContentNotChanged) => {
+            "Content has not changed since last save"
+                .text_reply_with_code(StatusCode::from_u16(254).unwrap())
+        }
+        Err(e) => e
+            .to_string()
+            .text_reply_with_code(StatusCode::INTERNAL_SERVER_ERROR),
     }
 }
 
@@ -179,6 +178,6 @@ pub async fn request_handler(req: Request<Body>) -> Result<Response<Body>> {
         (&Method::POST, "/save_links") => save_links(req).await,
         (&Method::POST, "/register_click") => crate::links::register_click(req).await,
         (&Method::GET, "/link_stats") => crate::links::get_link_stats(req).await,
-        _ => GenericMessage::not_found(),
+        _ => "Method not implemented".text_reply_with_code(StatusCode::NOT_IMPLEMENTED),
     }
 }
