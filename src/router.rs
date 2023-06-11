@@ -156,20 +156,20 @@ async fn save_links(mut request: Request<Body>) -> Result<Response<Body>> {
         Ok(p) => p,
         Err(e) => {
             return format!("Error parsing json: {}", e)
-                .text_reply_with_code(StatusCode::BAD_REQUEST);
+                .to_text_response_with_status(StatusCode::BAD_REQUEST);
         }
     };
 
     let user = get_user_name(&request)?;
     match do_work(p, user).await {
-        Ok(content) => content.text_reply(),
+        Ok(content) => content.to_text_response(),
         Err(e) if e.downcast_ref() == Some(&LinksError::ContentNotChanged) => {
             "Content has not changed since last save"
-                .text_reply_with_code(StatusCode::from_u16(254).unwrap())
+                .to_text_response_with_status(StatusCode::from_u16(254).unwrap())
         }
         Err(e) => e
             .to_string()
-            .text_reply_with_code(StatusCode::INTERNAL_SERVER_ERROR),
+            .to_text_response_with_status(StatusCode::INTERNAL_SERVER_ERROR),
     }
 }
 
@@ -178,6 +178,6 @@ pub async fn request_handler(req: Request<Body>) -> Result<Response<Body>> {
         (&Method::POST, "/save_links") => save_links(req).await,
         (&Method::POST, "/register_click") => crate::links::register_click(req).await,
         (&Method::GET, "/link_stats") => crate::links::get_link_stats(req).await,
-        _ => "Method not implemented".text_reply_with_code(StatusCode::NOT_IMPLEMENTED),
+        _ => "Method not implemented".to_text_response_with_status(StatusCode::NOT_IMPLEMENTED),
     }
 }

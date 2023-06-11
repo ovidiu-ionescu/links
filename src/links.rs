@@ -122,7 +122,7 @@ pub async fn register_click(mut request: Request<Body>) -> Result<Response<Body>
     let click = parse_body(&mut request).await?;
     let user = get_user_name(&request)?;
     write_click(click, user).await?;
-    "Click registered".text_reply()
+    "Click registered".to_text_response()
 }
 
 fn compute_link_stats(buf: &CircularString) -> HashSet<&str> {
@@ -153,5 +153,5 @@ mod test {
 pub async fn get_link_stats(mut _request: Request<Body>) -> Result<Response<Body>> {
     let db = CLICK_LOG.lock().await;
     let stats = compute_link_stats(&db.buf);
-    serde_json::to_string(&stats)?.json_reply()
+    serde_json::to_string(&stats)?.to_json_response()
 }
