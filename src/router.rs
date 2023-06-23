@@ -6,6 +6,7 @@ use std::{
     fs::File,
     io::{BufWriter, Write},
 };
+use tracing::log::warn;
 
 use hyper::{Body, Method, Request, Response, StatusCode};
 
@@ -18,7 +19,7 @@ use thiserror::Error as ThisError;
 
 use async_lock::Mutex;
 
-use crate::utils::Result;
+use crate::{static_files::serve_file, utils::Result};
 use lazy_static::lazy_static;
 
 use crate::utils::{get_epoch_ms, get_user_name};
@@ -37,6 +38,7 @@ struct Payload {
 #[derive(Deserialize, Debug)]
 pub struct ApConfig {
     pub storage_dir:       String,
+    pub static_files_dir:  String,
     pub click_buffer_size: usize,
 }
 
@@ -74,7 +76,7 @@ fn verify_uuid(uuid: &str) -> Result<()> {
         static ref UUID: Regex = Regex::new(r#"^[\da-f]{8}-([\da-f]{4}-){3}[\da-f]{12}$"#).unwrap();
     }
     if !UUID.is_match(uuid) {
-        println!("Bad uuid");
+        warn!("Bad uuid");
         return err!(LinksError::BadUuid(String::from(uuid)));
     }
     Ok(())
@@ -178,6 +180,7 @@ pub async fn request_handler(req: Request<Body>) -> Result<Response<Body>> {
         (&Method::POST, "/save_links") => save_links(req).await,
         (&Method::POST, "/register_click") => crate::links::register_click(req).await,
         (&Method::GET, "/link_stats") => crate::links::get_link_stats(req).await,
+        (&Method::GET, _) => serve_file(req).await,
         _ => "Method not implemented".to_text_response_with_status(StatusCode::NOT_IMPLEMENTED),
     }
 }
