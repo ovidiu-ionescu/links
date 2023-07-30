@@ -1,0 +1,31 @@
+[package]
+name = "links-server"
+version = "0.1.1"
+edition = "2021"
+authors = ["Ovidiu Ionescu <ovidiu@ionescu.net>"]
+description = "A server for managing lists of urls."
+repository = "https://github.com/ovidiu-ionescu/links-server"
+license = "AGPL-3.0-or-later"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+hyper={ version="0", features = ["full"] }
+futures = "0"
+tokio = { version="1", features = ["full"] }
+pretty_env_logger = "0"
+config = "0"
+lazy_static = "1"
+itertools = "0"
+serde_json = "1"
+serde = { version = "1", features = ["derive"] }
+bytes = "1"
+regex = "1"
+thiserror = "1"
+async-lock = "2"
+lib-hyper-organizator = { version = "0.4.4", features = ["security"] }
+mimalloc = "0"
+tracing-subscriber = "0"
+tracing = "0"
+tracing-test = "0"
+

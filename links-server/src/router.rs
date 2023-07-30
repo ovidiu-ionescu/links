@@ -1,6 +1,7 @@
 use bytes::Buf;
 use lib_hyper_organizator::response_utils::{read_full_body, IntoResultHyperResponse};
 use std::{
+    collections::HashMap,
     fs,
     fs::rename,
     fs::File,
@@ -40,6 +41,13 @@ pub struct ApConfig {
     pub storage_dir:       String,
     pub static_files_dir:  String,
     pub click_buffer_size: usize,
+    pub static_files:      HashMap<String, FileDescriptor>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct FileDescriptor {
+    pub file: String,
+    pub mime: String,
 }
 
 impl ApConfig {

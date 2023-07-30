@@ -3,11 +3,10 @@ api_ip = "0.0.0.0:3000"
 [security]
 ignore = [ 
   "/", 
-  "/pkg_test/concatenate.js",
-  "/pkg_test/concatenate_bg.wasm",
+  "/pkg_test/links_wasm.js",
+  "/pkg_test/links_wasm_bg.wasm",
   "/links-manifest.json",
-  "/images/links.ico",
-  "/images/links-4x.png",
+  "/images/links.svg",
   "/links"
 ]
 
@@ -16,12 +15,12 @@ storage_dir = "data"
 static_files_dir = "html"
 click_buffer_size = 1048576
 
-[application_static_files]
+[application.static_files]
 "/"                             = { file = "index.html", mime = "text/html" }
-"/pkg_test/concatenate.js"      = { file = "concatenate.js", mime = "text/javascript" }
-"/pkg_test/concatenate_bg.wasm" = { file = "concatenate_bg.wasm", mime = "application/wasm" }
+"/pkg_test/links_wasm.js"      = { file = "links_wasm.js", mime = "text/javascript" }
+"/pkg_test/links_wasm_bg.wasm" = { file = "links_wasm_bg.wasm", mime = "application/wasm" }
 "/links-manifest.json"          = { file = "links-manifest.json", mime = "application/json" }
-"/images/links.ico"             = { file = "links.ico", mime = "image/x-icon" }
-"/images/links-4x.png"          = { file = "links-4x.png", mime = "image/png" }
+"/images/links.svg"             = { file = "links.svg", mime = "image/svg+xml" }
+
  
 

@@ -8,20 +8,10 @@ use crate::utils::Result;
 
 pub async fn serve_file(req: Request<Body>) -> Result<Response<Body>> {
     info!("serve_file");
+    if let Some(file_info) = CONFIG.static_files.get(req.uri().path()) {
+        return serve_static_file(&file_info.file, &file_info.mime).await;
+    }
     match req.uri().path() {
-        "/" => serve_static_file("index.html", "text/html").await,
-        "/pkg_test/concatenate.js" => serve_static_file("concatenate.js", "text/javascript").await,
-        "/pkg_test/concatenate_bg.wasm" => {
-            serve_static_file("concatenate_bg.wasm", "application/wasm").await
-        }
-        "/links-manifest.json" => {
-            serve_static_file("links-manifest.json", "application/json").await
-        }
-        "/images/links.ico" => serve_static_file("links.ico", "image/x-icon").await,
-        "/images/links-4x.png" => serve_static_file("links-4x.png", "image/png").await,
-        "/329f4aef-f624-4ed1-8a89-bb9bb356a66a.md" => {
-            serve_static_file("329f4aef-f624-4ed1-8a89-bb9bb356a66a.md", "text/markdown").await
-        }
         "/links" => serve_links_file(req).await,
         _ => "invalid path".to_text_response_with_status(StatusCode::NOT_FOUND),
     }
