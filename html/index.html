@@ -192,7 +192,7 @@
       const uuidRegex = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/i;
       const uuid = uuidRegex.exec(window.location.search)[0];
       // let text_url =`${uuid}.md?${(+ new Date)}`;
-      let text_url =`/links?${uuid}`;
+      let text_url =`links?${uuid}`;
       let [_x, text_content] = await Promise.all([
         init(), fetch(text_url).then(response => response.text().then(text => bid('content').value = text ))
       ]);
@@ -255,7 +255,7 @@
         document.documentElement.className = `${theme} postit-colors`;
       })
       bid('save').addEventListener('click', async e => {
-        const response = await fetch('/save_links', {
+        const response = await fetch('save_links', {
           method: 'POST',
           mode: 'cors', cache: 'no-cache', credentials: 'same-origin',
           headers: { 
