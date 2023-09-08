@@ -15,7 +15,7 @@ spec:
         app: links
     spec:
       containers:
-        - image: links-server:v0.1.1
+        - image: links-server:{{ .Chart.AppVersion }}
           name: links
           # This is only informative, the executable decides the ports
           ports:
