@@ -46,11 +46,26 @@ pub fn transform_markdown(markdown_input: &str) -> String {
     html_output
 }
 
+/// Lines starting with 3 Japanese dakuten signs are comments.
+fn remove_comments(input: &str) -> String {
+    let mut output = String::with_capacity(input.len());
+    for line in input.lines() {
+        if !line.starts_with("\u{309B}\u{309B}\u{309B}") {
+            output.push_str(line);
+            output.push('\n');
+        }
+    }
+    output
+}
+
 #[wasm_bindgen]
 pub fn process_markdown(markdown_input: &str, base_64_limit: usize) -> String {
     if base_64_limit < 1 {
-        transform_markdown(markdown_input)
+        transform_markdown(&remove_comments(markdown_input))
     } else {
-        transform_markdown(&memo_rust::truncate_base64(markdown_input, base_64_limit))
+        transform_markdown(&memo_rust::truncate_base64(
+            &remove_comments(markdown_input),
+            base_64_limit,
+        ))
     }
 }
