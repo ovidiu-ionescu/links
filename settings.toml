@@ -1,6 +1,26 @@
 api_ip = "0.0.0.0:3000"
 
+[security]
+ignore = [ 
+  "/", 
+  "/pkg_test/links_wasm.js",
+  "/pkg_test/links_wasm_bg.wasm",
+  "/links-manifest.json",
+  "/images/links.svg",
+  "/links"
+]
+
 [application]
 storage_dir = "data"
+static_files_dir = "html"
 click_buffer_size = 1048576
+
+[application.static_files]
+"/"                             = { file = "index.html", mime = "text/html" }
+"/pkg_test/links_wasm.js"      = { file = "links_wasm.js", mime = "text/javascript" }
+"/pkg_test/links_wasm_bg.wasm" = { file = "links_wasm_bg.wasm", mime = "application/wasm" }
+"/links-manifest.json"          = { file = "links-manifest.json", mime = "application/json" }
+"/images/links.svg"             = { file = "links.svg", mime = "image/svg+xml" }
+
+ 
 

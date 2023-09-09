@@ -1,0 +1,11 @@
+apiVersion: v2
+name: links-workflow
+description: A server for links pages
+
+# the other type is library
+type: application
+# chart version
+version: 0.1.0
+# version of the application, use between quotes, it can be anything
+appVersion: "v0.1.1"
+

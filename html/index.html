@@ -4,7 +4,7 @@
     <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Links</title>
-    <link rel="shortcut icon" href="images/links.ico" />
+    <link rel="shortcut icon" href="images/links.svg" />
     <link rel="manifest" href="links-manifest.json" />
 <style type="text/css">
   /* https://color.adobe.com/search?q=467380&t=hex */
@@ -182,12 +182,17 @@
 </style>
     <script type="module">
       const bid = x => document.getElementById(x);
+      const sec_headers = {
+        'X-SSL-Client-Verify': 'SUCCESS',
+        'X-SSL-Client-S-DN': 'CN=ovidiu'
+      };
 
-      import init, { process_markdown, memo_encrypt, memo_decrypt } from "./pkg_test/concatenate.js";
+      import init, { process_markdown, memo_encrypt, memo_decrypt } from "./pkg_test/links_wasm.js";
       await init();
       const uuidRegex = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/i;
       const uuid = uuidRegex.exec(window.location.search)[0];
-      let text_url =`${uuid}.md?${(+ new Date)}`;
+      // let text_url =`${uuid}.md?${(+ new Date)}`;
+      let text_url =`links?${uuid}`;
       let [_x, text_content] = await Promise.all([
         init(), fetch(text_url).then(response => response.text().then(text => bid('content').value = text ))
       ]);
@@ -227,7 +232,9 @@
         if(!e.target.checked) {
           dest.querySelectorAll('a').forEach(a => a.style.color = '');
         } else {
-          const response = await fetch('link_stats')
+          const response = await fetch('link_stats', {
+            headers: sec_headers
+          });
           if(!response.ok) console.log('could not fetch link stats', response);
           const data = await response.json();
           data.forEach(url => {
@@ -248,10 +255,13 @@
         document.documentElement.className = `${theme} postit-colors`;
       })
       bid('save').addEventListener('click', async e => {
-        const response = await fetch('/save_links', {
+        const response = await fetch('save_links', {
           method: 'POST',
           mode: 'cors', cache: 'no-cache', credentials: 'same-origin',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            ... sec_headers,
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify({ uuid: uuid, content: bid('content').value})
         });
         if (!response.ok) {
@@ -288,7 +298,10 @@
         const response = await fetch('/register_click', {
           method: 'POST',
           mode: 'cors', cache: 'no-cache', credentials: 'same-origin',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            ... sec_headers,
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify({ uuid: uuid, href})
         });
 

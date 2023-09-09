@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: links-server-ingress
+  annotations:
+    # use nginx
+    kubernetes.io/ingress.class: "nginx"
+    # rewrite the target based on the regex capture group
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    # Merge the slashes before rewriting
+    nginx.ingress.kubernetes.io/merge-slashes: "true"
+spec:
+  rules:
+    - host: k8s.organizator.ro
+      http:
+        paths:
+          #- path: /links(/|$)(.*)
+          - path: /links/(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: links
+                port:
+                  number: 80
+
