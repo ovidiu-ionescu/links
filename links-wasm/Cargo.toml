@@ -1,6 +1,6 @@
 [package]
 name = "links-wasm"
-version = "0.1.0"
+version = "0.1.2"
 authors = ["Ovidiu Ionescu <ovidiu@ionescu.net>"]
 edition = "2021"
 license = "AGPL-3"

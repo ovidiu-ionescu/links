@@ -16,8 +16,8 @@ COPY html html
 COPY settings.toml settings.toml
 MAINTAINER Ovidiu Ionescu <ovidiu@ionescu.net>
 LABEL maintainer="Ovidiu Ionescu <ovidiu@ionescu.net>" \
-  version="0.1.1" \
-  tag="links-server:v0.1.1" \
+  version="0.1.2" \
+  tag="links-server:v0.1.2" \
   description="A server for managing lists of urls." \
   repository="https://github.com/ovidiu-ionescu/links-server" \
   name="links-server"\

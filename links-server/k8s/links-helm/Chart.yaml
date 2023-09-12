@@ -7,5 +7,5 @@ type: application
 # chart version
 version: 0.1.0
 # version of the application, use between quotes, it can be anything
-appVersion: "v0.1.1"
+appVersion: "v0.1.2"
 
