@@ -1,6 +1,7 @@
 mod circular_string;
 mod links;
 mod router;
+mod save_to_git;
 mod static_files;
 mod utils;
 

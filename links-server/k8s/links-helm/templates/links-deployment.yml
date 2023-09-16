@@ -14,6 +14,10 @@ spec:
       labels:
         app: links
     spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
         - image: links-server:{{ .Chart.AppVersion }}
           name: links
@@ -32,6 +36,8 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /data
+          securityContext:
+            allowPrivilegeEscalation: false
       volumes:
         - name: data
           hostPath: 

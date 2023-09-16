@@ -6,9 +6,17 @@ WORKDIR /usr/src/myapp
 # maybe use --link
 COPY . .
 LABEL stage="builder"
+RUN apt-get update && apt-get install -y \
+  libssl-dev \
+  pkg-config \
+  && rm -rf /var/lib/apt/lists/*
 RUN cargo build --release
 ### links-server
 FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y \
+  libssl-dev \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /usr/src/myapp/target/release/links-server /usr/local/bin/links-server
 # maybe embed in the executable
 COPY html html

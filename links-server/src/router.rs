@@ -3,11 +3,10 @@ use lib_hyper_organizator::response_utils::{read_full_body, IntoResultHyperRespo
 use std::{
     collections::HashMap,
     fs,
-    fs::rename,
     fs::File,
     io::{BufWriter, Write},
 };
-use tracing::log::warn;
+use tracing::log::{error, warn};
 
 use hyper::{Body, Method, Request, Response, StatusCode};
 
@@ -23,7 +22,8 @@ use async_lock::Mutex;
 use crate::{static_files::serve_file, utils::Result};
 use lazy_static::lazy_static;
 
-use crate::utils::{get_epoch_ms, get_user_name};
+use crate::save_to_git;
+use crate::utils::get_user_name;
 
 lazy_static! {
     pub static ref CONFIG: ApConfig = ApConfig::read_config();
@@ -69,8 +69,6 @@ pub enum LinksError {
     BadUserName(String),
     #[error("Content not changed")]
     ContentNotChanged,
-    #[error("Rename failed")]
-    RenameFailed,
 }
 
 macro_rules! err {
@@ -139,22 +137,12 @@ async fn do_work(p: Payload, cn: &str) -> Result<String> {
         return err!(LinksError::ContentNotChanged);
     }
 
-    // rename existing file, if present
-    let bk_file_name = format!(
-        "{}/{}_{}_{}.md",
-        CONFIG.storage_dir,
-        p.uuid,
-        get_epoch_ms(),
-        user
-    );
-    if rename(&file_name, &bk_file_name).is_err() {
-        println!("Could not rename {} to {}", &file_name, &bk_file_name);
-        return err!(LinksError::RenameFailed);
-    }
-
     let file = File::create(file_name)?;
     let mut out = BufWriter::new(&file);
     write!(out, "{}", p.content)?;
+    drop(out);
+
+    save_to_git::commit(&CONFIG.storage_dir, user)?;
 
     Ok(String::from("Standard response"))
 }
@@ -177,9 +165,11 @@ async fn save_links(mut request: Request<Body>) -> Result<Response<Body>> {
             "Content has not changed since last save"
                 .to_text_response_with_status(StatusCode::from_u16(254).unwrap())
         }
-        Err(e) => e
-            .to_string()
-            .to_text_response_with_status(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(e) => {
+            error!("Failed to save the links: {}", e);
+            e.to_string()
+                .to_text_response_with_status(StatusCode::INTERNAL_SERVER_ERROR)
+        }
     }
 }
 

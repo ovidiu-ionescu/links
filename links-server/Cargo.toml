@@ -28,4 +28,5 @@ mimalloc = "0"
 tracing-subscriber = "0"
 tracing = "0"
 tracing-test = "0"
+git2 =  { version = "0.18", features = ["vendored-libgit2"] }
 
