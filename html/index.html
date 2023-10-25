@@ -180,6 +180,12 @@
       padding-right: 10px;
   }
 </style>
+<script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+      mermaid.initialize({startOnLoad:false});
+      window.mermaid = mermaid;
+</script>
+
     <script type="module">
       const bid = x => document.getElementById(x);
       const sec_headers = {
@@ -201,15 +207,18 @@
       window.memo_encrypt = memo_encrypt;
       window.memo_decrypt = memo_decrypt;
 
-      const transform = () => {
+      const transform = async () => {
         let text = bid('content').value
         let title = /(?:#\s+)(.+)/.exec(text)?.[1]
         if (title) document.title = title
         let processed = process_markdown(text, 16);
         bid('dest').innerHTML = processed;
+
+        // render mermaid diagrams
+        await mermaid.run({ querySelector: '.language-mermaid' });
       }
-      bid('transform').addEventListener('click', e => {
-        transform();
+      bid('transform').addEventListener('click', async e => {
+        await transform();
       });
       bid('encrypt').addEventListener('click', e => {
         let text = bid('content').value
