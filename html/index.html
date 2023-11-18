@@ -155,7 +155,7 @@
       if(dest.querySelector('link') === null) {
         let link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = 'memo.css';
+        link.href = 'links.css';
         dest.appendChild(link);
       }
 
@@ -164,9 +164,6 @@
         await mermaid.run({querySelector: '.language-mermaid'});
       }
     }
-    bid('transform').addEventListener('click', async e => {
-      await transform();
-    });
     bid('encrypt').addEventListener('click', e => {
       let text = bid('content').value
       let pwd = bid('pwd').value;
@@ -197,11 +194,16 @@
         });
       }
     });
-    bid('edit').addEventListener('click', e => {
+    bid('edit').addEventListener('click', async e => {
       let edit_toolbar = bid('edit_toolbar');
       let display = edit_toolbar.style.display === 'none' ? 'block' : 'none';
+      let opposite_display = display === 'none' ? 'block' : 'none';
       bid('edit_toolbar').style.display = display;
       bid('content').style.display = display;
+      if (opposite_display !== 'none') {
+        await transform();
+      }
+      bid('dest').style.display = opposite_display;
     });
     bid('select-theme').addEventListener('change', e => {
       const theme = e.srcElement.value;
@@ -230,6 +232,13 @@
         }
       } else if (254 === response.status) {
         alert("No changes, no need to save");
+      }
+    });
+    document.addEventListener('keydown', e => {
+      const map = { 'e': 'edit', 's': 'save', ',': 'decrypt', '.': 'encrypt', ';': 'links'};
+      if (e.ctrlKey && map[e.key]) {
+        e.preventDefault();
+        bid(map[e.key]).click();
       }
     });
     // populate the theme selector drop down
@@ -262,6 +271,7 @@
 </head>
 <body>
 <div id="dest"></div>
+<textarea id="content" style="display:none"></textarea>
 <div id="editor">
   <p id="toolbar">
     <button id="decrypt">Decrypt</button>
@@ -269,7 +279,6 @@
     <label for="links">Highlight</label><input id="links" type="checkbox">
     <span id="edit_toolbar" style="display: none">
            <button id="encrypt">Encrypt</button>
-           <button id="transform">Transform</button>
            <button id="save">Save</button>
            <select id="select-theme">
              <option value='theme-ovidiu'>Ovidiu</option>
@@ -278,7 +287,6 @@
          </span>
     <button id="edit">Edit</button>
   </p>
-  <textarea id="content" style="display:none"></textarea>
 </div>
 </body>
 </html>
