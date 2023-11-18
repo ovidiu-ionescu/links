@@ -7,7 +7,9 @@ ignore = [
   "/pkg_test/links_wasm_bg.wasm",
   "/links-manifest.json",
   "/images/links.svg",
-  "/links"
+  "/links",
+  "/memo.css",
+  "/links.css",
 ]
 
 [application]
@@ -21,6 +23,8 @@ click_buffer_size = 1048576
 "/pkg_test/links_wasm_bg.wasm" = { file = "links_wasm_bg.wasm", mime = "application/wasm" }
 "/links-manifest.json"          = { file = "links-manifest.json", mime = "application/json" }
 "/images/links.svg"             = { file = "links.svg", mime = "image/svg+xml" }
+"/memo.css"                      = { file = "memo.css", mime = "text/css" }
+"/links.css"                     = { file = "links.css", mime = "text/css" }
 
  
 

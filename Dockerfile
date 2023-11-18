@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y \
 RUN cargo build --release
 ### links-server
 FROM debian:bookworm-slim
+ARG version
+#RUN echo "Oh dang look at that ${version}"
 RUN apt-get update && apt-get install -y \
   libssl-dev \
   && rm -rf /var/lib/apt/lists/*
@@ -24,8 +26,8 @@ COPY html html
 COPY settings.toml settings.toml
 MAINTAINER Ovidiu Ionescu <ovidiu@ionescu.net>
 LABEL maintainer="Ovidiu Ionescu <ovidiu@ionescu.net>" \
-  version="0.1.2" \
-  tag="links-server:v0.1.2" \
+  version="${version}" \
+  tag="links-server:v${version}" \
   description="A server for managing lists of urls." \
   repository="https://github.com/ovidiu-ionescu/links-server" \
   name="links-server"\
