@@ -1,0 +1,97 @@
+#dest ul {
+  line-height: 1.25em;
+  padding-top: 2em;
+  padding-bottom: 0.41em;
+  position: relative;
+  display: inline-block;
+  width: 7.08em;
+  border: 1px solid var(--color-2);
+  vertical-align: top;
+  margin-top: 0;
+
+}
+
+#dest ul li:first-child {
+  list-style: none;
+  background-color: var(--color-2);
+  display: block;
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  left: 0;
+  top: 0;
+}
+
+#dest a:link {
+  color: var(--color-3);
+  text-decoration: none;
+}
+
+#dest a:visited {
+  color: var(--color-3);
+  text-decoration: none;
+}
+
+#dest a:hover {
+  color: black;
+  background-color: var(--color-5);
+}
+
+#dest {
+  background-color: var(--color-4);
+  font-size: 19px;
+  font-family: Arial, sans-serif;
+  color: var(--color-3);
+}
+
+#dest hr {
+  color: var(--color-2);
+}
+
+/*
+ * Postit notes CSS inspired from: https://code.tutsplus.com/tutorials/create-a-sticky-note-effect-in-5-easy-steps-with-css3-and-html5--net-13934
+ */
+
+#dest p {
+  color: var(--stickie-font-color);
+  display: inline-block;
+  width: 10em;
+  min-height: 10em;
+  padding: 1em;
+  vertical-align: top;
+  position: relative;
+  margin: 5px;
+  box-shadow: 5px 5px 7px rgba(0, 0, 0, .4);
+  background: var(--stickie-purple);
+  transition: transform .15s linear;
+  transform: rotate(-6deg);
+}
+
+#dest p:nth-child(3n):hover, #dest p:nth-child(3n+1):hover, #dest p:nth-child(3n + 2):hover, #dest p:nth-child(5n):hover {
+  box-shadow: 10px 10px 7px rgba(0, 0, 0, .4);
+  transform: scale(1.25);
+  z-index: 5;
+}
+
+#dest p:nth-child(3n + 1) {
+  background: var(--stickie-yellow);
+}
+
+#dest p:nth-child(3n + 2) {
+  background: var(--stickie-green);
+}
+
+#dest p:nth-child(even) {
+  transform: rotate(4deg);
+  top: 5px;
+}
+
+#dest p:nth-child(3n) {
+  transform: rotate(-3deg);
+  top: -5px;
+}
+
+#dest p:nth-child(5n) {
+  transform: rotate(5deg);
+  top: -10px;
+}
