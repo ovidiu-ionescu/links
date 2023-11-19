@@ -1,4 +1,4 @@
-#dest ul {
+#dest ul, #dest ol {
   line-height: 1.25em;
   padding-top: 2em;
   padding-bottom: 0.41em;
@@ -11,7 +11,7 @@
 
 }
 
-#dest ul li:first-child {
+#dest ul li:first-child, #dest ol li:first-child  {
   list-style: none;
   background-color: var(--color-2);
   display: block;
