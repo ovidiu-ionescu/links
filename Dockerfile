@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
   pkg-config \
   && rm -rf /var/lib/apt/lists/*
 RUN cargo build --release
+RUN cargo install wasm-pack; cd links-wasm; wasm-pack build --target web
 ### links-server
 FROM debian:bookworm-slim
 ARG version
@@ -22,6 +23,8 @@ RUN apt-get update && apt-get install -y \
 COPY --from=builder /usr/src/myapp/target/release/links-server /usr/local/bin/links-server
 # maybe embed in the executable
 COPY html html
+# cargo does not automatically build this
+COPY --from=builder /usr/src/myapp/links-wasm/pkg/links_wasm_bg.wasm /usr/src/myapp/links-wasm/pkg/links_wasm.js html
 # maybe put in configmap
 COPY settings.toml settings.toml
 MAINTAINER Ovidiu Ionescu <ovidiu@ionescu.net>
