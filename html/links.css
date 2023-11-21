@@ -48,6 +48,10 @@
   color: var(--color-2);
 }
 
+#dest li:has(hr) { 
+  list-style: none; 
+}
+
 /*
  * Postit notes CSS inspired from: https://code.tutsplus.com/tutorials/create-a-sticky-note-effect-in-5-easy-steps-with-css3-and-html5--net-13934
  */
