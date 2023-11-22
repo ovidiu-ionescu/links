@@ -35,5 +35,5 @@ jobs:
         run: |
           VERSION=0.1.4
           docker build . --file Dockerfile --tag links-server:$VERSION --build-arg version=$VERSION
-          docker push ghcr.io/ovidiu-ionescu/links-server:$VERSION
+          docker push links-server:$VERSION
 
