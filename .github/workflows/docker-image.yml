@@ -6,15 +6,34 @@ on:
   pull_request:
     branches: [ "master" ]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  
 jobs:
 
   build:
 
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-    - uses: actions/checkout@v3
-    - name: Build the Docker image
-      run: |
-        VERSION=0.1.4
-        docker build . --file Dockerfile --tag links-server:$VERSION --build-arg version=$VERSION
+      - name: Check out the source 
+        uses: actions/checkout@v3
+        
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+    
+      - name: Build the Docker image
+        run: |
+          VERSION=0.1.4
+          docker build . --file Dockerfile --tag links-server:$VERSION --build-arg version=$VERSION
+          docker push ghcr.io/ovidiu-ionescu/links-server:$VERSION
+
