@@ -33,7 +33,7 @@ jobs:
     
       - name: Build the Docker image
         run: |
-          VERSION=0.1.4
+          VERSION=0.1.5
           docker build . --file Dockerfile --tag ghcr.io/ovidiu-ionescu/links-server:latest --build-arg version=$VERSION
           docker push ghcr.io/ovidiu-ionescu/links-server:latest
 
