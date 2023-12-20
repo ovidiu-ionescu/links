@@ -5,7 +5,7 @@ use tracing::trace;
 
 pub fn commit(repo_dir: &str, author: &str) -> Result<(), git2::Error> {
     trace!("committing to git repo: {}", repo_dir);
-    let repo = Repository::open(&Path::new(repo_dir))?;
+    let repo = Repository::open(Path::new(repo_dir))?;
 
     trace!("repo opened");
     let mut index = repo.index()?;
