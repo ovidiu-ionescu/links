@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
 
-use pulldown_cmark::{html, Options, Parser, RenderingOptions};
+use pulldown_cmark::{html, Options, Parser};
 
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
@@ -37,12 +37,15 @@ pub fn transform_markdown(markdown_input: &str) -> String {
     options.insert(Options::ENABLE_FOOTNOTES);
     options.insert(Options::ENABLE_STRIKETHROUGH);
     options.insert(Options::ENABLE_TASKLISTS);
+    options.insert(Options::ENABLE_SMART_PUNCTUATION);
+    options.insert(Options::ENABLE_HEADING_ATTRIBUTES);
+    options.insert(Options::ENABLE_YAML_STYLE_METADATA_BLOCKS);
+    options.insert(Options::ENABLE_PLUSES_DELIMITED_METADATA_BLOCKS);
+    
     let parser = Parser::new_ext(markdown_input, options);
 
     let mut html_output = String::new();
-    let mut rendering_options = RenderingOptions::empty();
-    rendering_options.insert(RenderingOptions::OPEN_LINK_IN_NEW_TAB);
-    html::push_html_ext(&mut html_output, parser, rendering_options);
+    html::push_html(&mut html_output, parser);
     html_output
 }
 

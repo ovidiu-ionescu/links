@@ -178,6 +178,7 @@ pub async fn request_handler(req: Request<Body>) -> Result<Response<Body>> {
         (&Method::POST, "/save_links") => save_links(req).await,
         (&Method::POST, "/register_click") => crate::links::register_click(req).await,
         (&Method::GET, "/link_stats") => crate::links::get_link_stats(req).await,
+        (&Method::GET, "/catalog") => crate::catalog::get_catalog(req).await,
         (&Method::GET, _) => serve_file(req).await,
         _ => "Method not implemented".to_text_response_with_status(StatusCode::NOT_IMPLEMENTED),
     }

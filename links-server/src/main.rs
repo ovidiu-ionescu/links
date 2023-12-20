@@ -1,3 +1,4 @@
+mod catalog;
 mod circular_string;
 mod links;
 mod router;
