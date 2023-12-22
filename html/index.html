@@ -133,11 +133,12 @@
     await init();
     const uuidRegex = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/i;
     let text_url = 'catalog'
+    let uuid = 'catalog'
     try {
-      const uuid = uuidRegex.exec(window.location.search)[0];
+      uuid = uuidRegex.exec(window.location.search)[0];
       text_url = `links?${uuid}`;
     } catch (e) {
-      console.log('no uuid found in url, using catalog');
+      //console.log('no uuid found in url, using catalog');
     }
     let [_x, text_content] = await Promise.all([
       init(), fetch(text_url, {headers: sec_headers}).then(response => response.text().then(text => bid('content').value = text))
