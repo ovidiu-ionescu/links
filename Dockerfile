@@ -1,26 +1,28 @@
 # Build the links-server image with using a two stage Dockerfile.
 
-FROM rust:slim-bookworm AS builder
+FROM clux/muslrust:stable AS builder
 WORKDIR /usr/src/myapp
 # maybe use --link
 COPY . .
 LABEL stage="builder"
-RUN apt-get update && apt-get install -y \
-  libssl-dev \
-  pkg-config \
-  && rm -rf /var/lib/apt/lists/*
+# this was needed when using the debian image
+#RUN apt-get update && apt-get install -y \
+#  libssl-dev \
+#  pkg-config \
+#  && rm -rf /var/lib/apt/lists/*
 RUN cargo build --release
 RUN cargo install wasm-pack; cd links-wasm; wasm-pack build --target web
 
 ### Finished building, assemble the final image for links-server
-FROM debian:bookworm-slim
+FROM scratch
 ARG version
+# this was needed when using the debian image
 #RUN echo "Oh dang look at that ${version}"
-RUN apt-get update && apt-get install -y \
-  libssl-dev \
-  && rm -rf /var/lib/apt/lists/*
+#RUN apt-get update && apt-get install -y \
+#  libssl-dev \
+#  && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /usr/src/myapp/target/release/links-server /usr/local/bin/links-server
+COPY --from=builder /usr/src/myapp/target/x86_64-unknown-linux-musl/release/links-server /usr/local/bin/links-server
 # maybe embed in the executable
 COPY html html
 # get the wasm files
