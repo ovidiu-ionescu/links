@@ -15,7 +15,9 @@ pub fn get_epoch_ms() -> u128 {
 
 pub fn get_user_name(request: &Request<Body>) -> Result<&str> {
     let Some(user_id) = request.extensions().get::<UserId>() else {
-        return Err(GenericError::from("No user found in request, this should not happen"));
+        return Err(GenericError::from(
+            "No user found in request, this should not happen",
+        ));
     };
     let user = &user_id.0;
     Ok(user)

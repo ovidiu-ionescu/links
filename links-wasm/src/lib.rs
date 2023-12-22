@@ -41,7 +41,7 @@ pub fn transform_markdown(markdown_input: &str) -> String {
     options.insert(Options::ENABLE_HEADING_ATTRIBUTES);
     options.insert(Options::ENABLE_YAML_STYLE_METADATA_BLOCKS);
     options.insert(Options::ENABLE_PLUSES_DELIMITED_METADATA_BLOCKS);
-    
+
     let parser = Parser::new_ext(markdown_input, options);
 
     let mut html_output = String::new();

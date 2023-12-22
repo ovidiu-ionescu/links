@@ -1,32 +1,33 @@
-use hyper::{Body, Request, Response, StatusCode};
-use tokio::fs::{read_dir, DirEntry};
 use crate::utils::Result;
+use hyper::{Body, Request, Response, StatusCode};
 use lib_hyper_organizator::response_utils::IntoResultHyperResponse;
+use tokio::fs::{read_dir, DirEntry};
 
 use crate::router::CONFIG;
-use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::fs::File;
+use tokio::io::{AsyncBufReadExt, BufReader};
 
 pub async fn get_catalog(_req: Request<Body>) -> Result<Response<Body>> {
     match build_catalog(&CONFIG.storage_dir).await {
         Ok(catalog) => catalog.to_text_response(),
-        Err(e) => e.to_string().to_text_response_with_status(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(e) => e
+            .to_string()
+            .to_text_response_with_status(StatusCode::INTERNAL_SERVER_ERROR),
     }
 }
 
 fn trim(s: &str) -> &str {
-    s.trim_start_matches('#').trim_matches(' ')
+    s.trim_start_matches('#')
+        .trim_matches(' ')
         .trim_end_matches(|c| c == '\n' || c == '\r' || c == ' ' || c == '\t')
 }
 
 async fn build_catalog(dir: &str) -> Result<String> {
-    let mut catalog = String::from(
-        indoc::indoc! {r#"# Catalog
+    let mut catalog = String::from(indoc::indoc! {r#"# Catalog
 
            <link rel="stylesheet" href="/memo.css" >
            
-        "#}
-    );
+        "#});
     let mut titles = Vec::<String>::new();
     let mut file_names = read_dir(dir).await?;
     while let Some(dir_entry) = file_names.next_entry().await? {
@@ -67,6 +68,5 @@ mod tests {
     async fn test_build_catalog() {
         let s = build_catalog("../data").await.unwrap();
         println!("{s}");
-
     }
 }
