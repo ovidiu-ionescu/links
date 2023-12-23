@@ -17,7 +17,8 @@ pub async fn get_catalog(_req: Request<Body>) -> Result<Response<Body>> {
 }
 
 fn trim(s: &str) -> &str {
-    s.trim_start_matches('#')
+    // we allow titles inside comments
+    s.trim_start_matches(|c| c == '\u{309B}' || c == '#' || c == ' ')
         .trim_matches(' ')
         .trim_end_matches(|c| c == '\n' || c == '\r' || c == ' ' || c == '\t')
 }
