@@ -108,9 +108,9 @@
   </style>
 <!--  <link id="style_variation" rel="stylesheet" href="/links.css">-->
   <script type="module">
-    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
 
-    if(mermaid) {
+      if(mermaid) {
       mermaid.initialize({startOnLoad: false});
       window.mermaid = mermaid;
     }
@@ -169,19 +169,17 @@
         await mermaid.run({querySelector: '.language-mermaid'});
       }
     }
-    bid('encrypt').addEventListener('click', e => {
+    bid('encrypt').addEventListener('click', async _e => {
       let text = bid('content').value
       let pwd = bid('pwd').value;
-      let enc_text = memo_encrypt(text, pwd, +new Date());
-      bid('content').value = enc_text;
-      bid('dest').innerHTML = process_markdown(enc_text, 16);
+      bid('content').value = memo_encrypt(text, pwd, +new Date());
+      await transform();
     });
-    bid('decrypt').addEventListener('click', e => {
+    bid('decrypt').addEventListener('click', async _e => {
       let text = bid('content').value
       let pwd = bid('pwd').value;
-      let clear_text = memo_decrypt(text, pwd);
-      bid('content').value = clear_text;
-      bid('dest').innerHTML = process_markdown(clear_text, 16);
+      bid('content').value = memo_decrypt(text, pwd);
+      await transform();
     });
     bid('links').addEventListener('click', async e => {
       const dest = bid('dest')
@@ -199,7 +197,7 @@
         });
       }
     });
-    bid('edit').addEventListener('click', async e => {
+    bid('edit').addEventListener('click', async _e => {
       let edit_toolbar = bid('edit_toolbar');
       let display = edit_toolbar.style.display === 'none' ? 'block' : 'none';
       let opposite_display = display === 'none' ? 'block' : 'none';
@@ -211,11 +209,11 @@
       bid('dest').style.display = opposite_display;
     });
     bid('select-theme').addEventListener('change', e => {
-      const theme = e.srcElement.value;
+      const theme = e.target.value;
       localStorage.setItem('theme', theme);
       document.documentElement.className = `${theme} postit-colors`;
     })
-    bid('save').addEventListener('click', async e => {
+    bid('save').addEventListener('click', async _e => {
       const response = await fetch('save_links', {
         method: 'POST',
         mode: 'cors', cache: 'no-cache', credentials: 'same-origin',
@@ -259,7 +257,8 @@
       const href = e.target.getAttribute("href");
       if (!href) return;
 
-      const response = await fetch('/register_click', {
+      // register the click with the server for analytics
+      await fetch('/register_click', {
         method: 'POST',
         mode: 'cors', cache: 'no-cache', credentials: 'same-origin',
         headers: {
@@ -268,7 +267,6 @@
         },
         body: JSON.stringify({uuid: uuid, href})
       });
-
     });
 
     transform();
