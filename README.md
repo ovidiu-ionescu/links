@@ -1,7 +1,7 @@
 # Links server
 
-Web server, stores received text file directly on the file system
-Old version is renamed with a timestamp
+Web server, stores received text file directly on the file system.
+All modifications are kept in a git repository.
 
 
 The settings are stored in `settings.toml'. This is an example of the content:
