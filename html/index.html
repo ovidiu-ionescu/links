@@ -237,8 +237,9 @@
                     markdown: bid("content").value,
                 };
                 localStorage.setItem("links", JSON.stringify(localSave));
+                let response;
                 try {
-                    const response = await fetch("save_links", {
+                    response = await fetch("save_links", {
                         method: "POST",
                         mode: "cors",
                         cache: "no-cache",

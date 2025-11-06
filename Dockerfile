@@ -29,8 +29,7 @@ COPY html html
 COPY --from=builder /usr/src/myapp/links-wasm/pkg/links_wasm_bg.wasm /usr/src/myapp/links-wasm/pkg/links_wasm.js html
 # maybe put in configmap
 COPY settings.toml settings.toml
-MAINTAINER Ovidiu Ionescu <ovidiu@ionescu.net>
-LABEL maintainer="Ovidiu Ionescu <ovidiu@ionescu.net>" \
+LABEL org.opencontainers.image.authors="Ovidiu Ionescu <ovidiu@ionescu.net>"\
   version="${version}" \
   tag="links-server:v${version}" \
   description="A server for managing lists of urls." \
